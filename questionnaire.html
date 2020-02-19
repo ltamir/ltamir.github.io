@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+	<meta charset="UTF-8">
+	<title>חשבון צעיר - תרגילים</title>
+	<link rel="Shortcut icon" href="logo.jpg">
+	<link rel="stylesheet" type="text/css" href="style_clean.css">
+	<script type="text/javascript" src="common.js"></script>
+	<script type="text/javascript" src="dt.js"></script>
+	<script type="text/javascript" src="squareBoard.js"></script>
+
+	<script type="text/javascript">
+
+		var maxOperations;
+		var isActiveQuestionnaire = true;
+		var firstEnter;
+
+		function handleNewQuestionnaire(){
+			var newQuestionnaire = false;
+
+			if(_totalQuestionnaires == 0)
+				newQuestionnaire = true;
+			else
+				var newQuestionnaire = confirm("האם ברצונך להתחיל שאלון חדש ?");
+			
+			if(newQuestionnaire){
+				_currentQuestion = 1;
+				_currentScore = 0;
+				isActiveQuestionnaire = true;
+				incTotalQuestionnaires();
+				getDomElement("txtAnwersNum").disabled = false;
+				_questionsHistory = "";
+				saveSessionScores();
+				saveStorageScores();
+				handleGenerateQuestion();
+
+				displayQuestionnaireNum();
+				setMsgInfo("התרגול החל. בהצלחה!");
+			}
+
+		}
+
+		function displayQuestionnaireNum(){
+			var postfix;
+			if(isActiveQuestionnaire)
+				postfix = " פעיל";
+			else
+				postfix = " תם";
+
+			getDomElement("questionnaireDetails").innerHTML = "שאלון מספר # " + (_totalQuestionnaires) + postfix;
+		}
+
+
+		function handleValidateAnswer(){
+
+			if(isQuestionnaireFinished())
+				return;
+
+			// if solver is on do not check the answer
+			if(getDomElement("txtAnwersNum").disabled == true){
+				setMsgInfo("עליך להסתיר את הפתרון ולהקליד את התשובה");
+				return;
+			}
+
+			var operationSign = getDomElement("lblOperation").innerHTML;
+			var leftNum = getDomElement("lblLeftNum").innerHTML;
+			var rightNum = getDomElement("lblRightNum").innerHTML;
+			var anwersNum = getDomElement("txtAnwersNum").value;
+			var sum;
+
+			// if answer was not entered
+			if(anwersNum.length == 0){
+				setMsgFailure(" הקלידו את התשובה ואז לחצו על <span class=\"cssButton\">בדיקה והמשך</span>");
+				return;
+			}
+
+			switch(operationSign){
+				case "+":
+					sum = parseInt(leftNum) + parseInt(rightNum);
+					break;
+				case "-":
+					sum = parseInt(leftNum) - parseInt(rightNum);
+					break;
+				case "*":
+					sum = parseInt(leftNum) * parseInt(rightNum);
+					break;
+				case "/":
+					sum = parseInt(leftNum) / parseInt(rightNum);
+					break;
+				default:
+					sum = 0;
+					setMsgFailure("אירעה שגיאה לא צפויה. אנא נסו שוב מאוחר יותר");
+					break;
+			}
+
+			//log("sum: " + sum + " anwersNum: " + anwersNum);
+
+			aggrQuestionsHistory(
+				formatQuestion(leftNum, rightNum, operationSign, anwersNum, sum)
+				); 
+
+			if(anwersNum == sum){
+				incCurrentScore();
+				parseInt(_totalScore ++);
+
+				setMsgSuccess( "תשובה נכונה :) " + leftNum + "  " + getDomElement("lblOperation").innerHTML
+				+ " " + rightNum + " = " + anwersNum + ". ניקודך הנוכחי הוא " + _currentScore );
+			}else{
+				setMsgFailure("תשובה זו אינה נכונה. " + leftNum + "  " + getDomElement("lblOperation").innerHTML
+				+ " " + rightNum + " = " + sum);
+			}
+
+			incCurrentQuestion();
+			saveSessionScores();
+			saveStorageScores();
+
+			if( isQuestionnaireFinished() ){
+				handleFinishedQuestionnaire();
+				setMsgSuccess("סימת את השאלון");
+				navigateResults();	// will not see last answer		
+
+			}else{
+				handleGenerateQuestion();				
+			}
+
+		}
+
+		function isQuestionnaireFinished(){
+			if(parseInt(_currentQuestion) > parseInt(_numOfQuestions))
+				return true;
+			else
+				return false;
+		}
+
+		function handleFinishedQuestionnaire(){
+			
+			getDomElement("lblLeftNum").innerHTML = "ב";
+			getDomElement("lblRightNum").innerHTML = "ד";
+			getDomElement("lblOperation").innerHTML = "*";
+			getDomElement("txtAnwersNum").value = "ח";
+			getDomElement("txtAnwersNum").disabled = true;
+
+			getDomElement("lblQuestionNumber").innerHTML = "";
+			
+			if(firstEnter)
+				setMsgInfo("השאלון תם. לחץ/י על כפתור <b class='cssMessageInfo'>שאלון חדש</b> ליצירת שאלון חדש");
+			else
+				setMsgInfo("השאלון תם");
+
+			getDomElement("cmdNewQuestionnaire").style.visibility = "visible";
+
+			isActiveQuestionnaire = false;
+		}
+
+		function handelRunningQuestionnaire(){
+			isActiveQuestionnaire = true;
+			getDomElement("cmdNewQuestionnaire").style.visibility = "hidden";
+		}
+
+		function handleGenerateQuestion(){
+
+			if(isQuestionnaireFinished())
+				return;
+
+			var leftNum = 0, rightNum = 0, switchNum;
+			var operation = getDomElement("lblOperation");
+
+			getDomElement("txtAnwersNum").value = "";
+
+			leftNum = Math.floor( (Math.random() * _maxNumValue) + 1);
+			rightNum = Math.floor( (Math.random() * _maxNumValue) + 1);
+
+			// generate random op number if we have more than one selected
+			if(maxOperations > 1)
+				_currOperation = getNextOperation();
+			else
+				_currOperation = 1;
+
+			//log("generateQuestion " + _currOperation);
+			operation.innerHTML = getOperationByValue(_currOperation);
+
+			// handle negatives
+			if(operation.innerHTML == "-" && _enableNegatives == "0"){
+				if(rightNum > leftNum){
+					switchNum = leftNum;
+					leftNum = rightNum;
+					rightNum = switchNum;
+				}
+			}
+
+			// handle remainders
+			if(operation.innerHTML == "/" && _enableRemainder == "0"){
+				if( (leftNum % rightNum) > 0){
+					leftNum -= (leftNum % rightNum);
+				}
+			}
+
+			getDomElement("lblLeftNum").innerHTML = leftNum;
+			getDomElement("lblRightNum").innerHTML = rightNum;
+			getDomElement("lblQuestionNumber").innerHTML = "תרגיל " + _currentQuestion + "#  :";
+
+			getDomElement("txtAnwersNum").focus();
+
+		}
+
+		// generates a number between 1 and the number of selected operations
+		function getNextOperation(){
+
+			var operationValue = Math.floor( (Math.random() * maxOperations) + 1);
+			return operationValue;
+		}
+
+		function getOperationByValue(value){
+		    "use strict";
+			var operationChar;
+
+			operationChar = enabledOperations.charAt(value - 1);
+
+			return operationChar;
+		}
+
+		function getMaxOperations(){
+			return enabledOperations.length;
+		}
+
+		function handleSkipQuestion(){
+			if(isQuestionnaireFinished())
+				return;
+
+			if(getDomElement("txtAnwersNum").disabled == true)
+				toggleState(getDomElement("cmdSolver"), 'showAnswer', 'hideAnswer', '&nbsp; הצג פתרון &nbsp;', 'הסתר פתרון');
+
+			setMsgInfo( "ניקודך הנוכחי הוא " + _currentScore );
+			handleGenerateQuestion();
+			getDomElement("txtAnwersNum").value = "";
+		}
+
+
+		function handleActivateOnEnter(event,	 funcName){
+			var keyCode = event.which || event.keyCode;
+			if(keyCode == 13)
+				eval(funcName);
+		}
+
+
+		// ***** Body constructor *****//
+
+		function init(){
+			commonInit();
+			loadSessionUserDetails();
+			loadSessionPreferences();
+			loadSessionScores();
+			loadOperations();
+
+			firstEnter = loadSessionData("firstEnter");
+			if(firstEnter == undefined)
+				firstEnter = true;
+			else
+				firstEnter = false;
+
+			maxOperations = getMaxOperations();
+
+			if(isQuestionnaireFinished()){
+				handleFinishedQuestionnaire();
+				return;
+			}
+
+			// if this is the 1st time create a new questionnaire 
+			if(_totalQuestionnaires == 0)
+				handleNewQuestionnaire();
+			else
+				handleGenerateQuestion();
+				
+			displayQuestionnaireNum();
+			
+			if(_currentQuestion == 1)
+				setMsgInfo("התרגול החל. בהצלחה!");
+
+		}
+
+
+	</script>
+</head>
+<body onload="init()">
+
+	<table width="100%" border="0">
+		<tr>
+			<td align="center" rowspan="4"><img src="arithmatics.jpeg"></td>
+			<td class="cssMenu" onclick="navigateLogin()">עדכון פרטים</td>
+			<td class="cssMenu" onclick="navigatePreferences()">הכנת הלומדה</td>
+			<td class="cssSelectedMenu" onclick="navigateQuestions()">השאלון</td>
+			<td class="cssMenu" onclick="navigateResults()">תוצאות</td>
+			<td class="cssMenu" onclick="navigateHistory()">היסטוריה</td>
+			<td class="cssMenu" onclick="navigateNotes()">אודות</td>
+			<td class="cssMenu" onclick="logout()">יציאה</td>
+		</tr>
+        <tr>
+            <td></td>
+            <td></td>
+            <td class="cssSelectedMenuLine"></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+			<td colspan="7">
+                <hr style="padding: 0px; margin:0px;"/>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" class="cssMessageInfo" id="userNameMessage"></td>
+            <td></td>
+            <td></td>
+            <td colspan="2" class="cssMessageInfo" id="questionnaireDetails"></td>
+        </tr>
+	</table>
+
+	<div class="cssMessageBoard" width="100%" id="lblMessage"></div>
+
+    <span id="cmdNewQuestionnaire" class="cssButton" style="visibility:hidden" onmousedown="btnDown(this)" onmouseup="btnUp(this)" onclick="handleNewQuestionnaire()">&nbsp; שאלון חדש &nbsp;</span>
+
+
+	<table border="0" width="60%" style="background-image:url('math_background.jpg')">
+	        <tr>
+	            <td colspan="3">&nbsp;</td>
+	        </tr>
+		<tr >
+			<td>
+				<span id="lblQuestionNumber"></span>
+			</td>
+			<td dir="ltr" class="cssMathExercise">
+				<span id="lblLeftNum"></span>
+				<span id="lblOperation"></span>
+				<span id="lblRightNum"></span>
+				<span id="equal">&nbsp;=&nbsp;</span>
+				<input type="text" id="txtAnwersNum" size="3" class="cssMathExercise"  onkeypress="handleActivateOnEnter(event, 'handleValidateAnswer()')"/>
+			</td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td>
+				<br/><br/>
+				<span id="cmdCheck" class="cssButton" onmousedown="btnDown(this)" onmouseup="btnUp(this)" onclick="handleValidateAnswer()">&nbsp; בדיקה והמשך &nbsp;</span>
+
+			</td>
+			<td>
+				<br/><br/>
+				<span class="cssButton" onmousedown="btnDown(this)" onmouseup="btnUp(this)" onclick="handleSkipQuestion()">&nbsp; דלג/י לשאלה הבאה &nbsp;</span>
+			</td>
+			<td>
+				<br/><br/>
+				<!-- <span>&nbsp; הצג פתרון &nbsp;</span> -->
+				<div><span id="cmdSolver" class="cssButton" onclick="toggleState(this, 'showAnswer', 'hideAnswer', '&nbsp; הצג פתרון &nbsp;', 'הסתר פתרון');">&nbsp; הצג פתרון &nbsp;</span>
+					</div>
+			</td>
+		</tr>
+	</table>
+
+	<hr/>
+
+	<table dir="ltr" border="0" width="100%">
+		<tr>
+			<td>
+				<div dir="rtl" style="text-align: center;" class="cssMessageInfo">לוח הכפל</div>
+			</td>
+			<td>
+				&nbsp;
+			</td>
+			<td>
+				<div dir="rtl" style="text-align: center;" class="cssMessageInfo">לוח החיבור</div>
+			</td>
+		</tr>
+		<tr>
+			<td align="center">
+				<table dir="ltr" id="multiplicationSquare">
+					<tr>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr00d00">X</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr00d01">1</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr00d02">2</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr00d03">3</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr00d04">4</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr00d05">5</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr00d06">6</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr00d07">7</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr00d08">8</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr00d09">9</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr00d010">10</td>
+					</tr>
+					<tr>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr01d00">1</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr01d01">1</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr01d02">2</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr01d03">3</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr01d04">4</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr01d05">5</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr01d06">6</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr01d07">7</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr01d08">8</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr01d09">9</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr01d010">10</td>
+					</tr>
+					<tr>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr02d00">2</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr02d01">2</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr02d02">4</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr02d03">6</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr02d04">8</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr02d05">10</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr02d06">12</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr02d07">14</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr02d08">16</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr02d09">18</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr02d010">20</td>
+					</tr>
+					<tr>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr03d00">3</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr03d01">3</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr03d02">6</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr03d03">9</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr03d04">12</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr03d05">15</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr03d06">18</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr03d07">21</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr03d08">24</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr03d09">27</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr03d010">30</td>
+					</tr>
+					<tr>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr04d00">4</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr04d01">4</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr04d02">8</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr04d03">12</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr04d04">16</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr04d05">20</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr04d06">24</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr04d07">28</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr04d08">32</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr04d09">36</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr04d010">40</td>
+					</tr>
+					<tr>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr05d00">5</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr05d01">5</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr05d02">10</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr05d03">15</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr05d04">20</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr05d05">25</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr05d06">30</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr05d07">35</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr05d08">40</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr05d09">45</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr05d010">50</td>
+					</tr>
+					<tr>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr06d00">6</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr06d01">6</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr06d02">12</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr06d03">18</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr06d04">24</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr06d05">30</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr06d06">36</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr06d07">42</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr06d08">48</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr06d09">54</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr06d010">60</td>
+					</tr>
+					<tr>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr07d00">7</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr07d01">7</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr07d02">14</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr07d03">21</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr07d04">28</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr07d05">35</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr07d06">42</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr07d07">49</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr07d08">56</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr07d09">63</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr07d010">70</td>
+					</tr>
+					<tr>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr08d00">8</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr08d01">8</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr08d02">16</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr08d03">24</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr08d04">32</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr08d05">40</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr08d06">48</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr08d07">56</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr08d08">64</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr08d09">72</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr08d010">80</td>
+					</tr>
+					<tr>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr09d00">9</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr09d01">9</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr09d02">18</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr09d03">27</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr09d04">36</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr09d05">45</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr09d06">54</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr09d07">63</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr09d08">72</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr09d09">81</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr09d010">90</td>
+					</tr>
+					<tr>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr10d00">10</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr10d01">10</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr10d02">20</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr10d03">30</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr10d04">40</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr10d05">50</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr10d06">60</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr10d07">70</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr10d08">80</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr10d09">90</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="multiTr10d010">100</td>
+					</tr>
+				</table>
+
+			</td>
+			<td>
+				&nbsp;&nbsp;&nbsp;
+			</td>
+			<td  align="center">
+				<table dir="ltr" id="additionSquare">
+					<tr>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr00d00">+</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr00d01">1</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr00d02">2</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr00d03">3</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr00d04">4</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr00d05">5</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr00d06">6</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr00d07">7</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr00d08">8</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr00d09">9</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr00d010">10</td>
+					</tr>
+					<tr>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr01d00">1</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr01d01">2</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr01d02">3</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr01d03">4</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr01d04">5</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr01d05">6</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr01d06">7</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr01d07">8</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr01d08">9</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr01d09">10</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr01d010">11</td>
+					</tr>
+					<tr>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr02d00">2</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr02d01">3</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr02d02">4</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr02d03">5</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr02d04">6</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr02d05">7</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr02d06">8</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr02d07">9</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr02d08">10</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr02d09">11</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr02d010">12</td>
+					</tr>
+					<tr>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr03d00">3</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr03d01">4</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr03d02">5</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr03d03">6</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr03d04">7</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr03d05">8</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr03d06">9</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr03d07">10</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr03d08">11</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr03d09">12</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr03d010">13</td>
+					</tr>
+					<tr>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr04d00">4</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr04d01">5</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr04d02">6</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr04d03">7</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr04d04">8</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr04d05">9</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr04d06">10</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr04d07">11</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr04d08">12</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr04d09">13</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr04d010">14</td>
+					</tr>
+					<tr>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr05d00">5</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr05d01">6</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr05d02">7</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr05d03">8</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr05d04">9</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr05d05">10</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr05d06">11</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr05d07">12</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr05d08">13</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr05d09">14</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr05d010">15</td>
+					</tr>
+					<tr>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr06d00">6</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr06d01">7</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr06d02">8</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr06d03">9</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr06d04">10</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr06d05">11</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr06d06">12</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr06d07">13</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr06d08">14</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr06d09">15</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr06d010">16</td>
+					</tr>
+					<tr>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr07d00">7</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr07d01">8</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr07d02">9</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr07d03">10</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr07d04">11</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr07d05">12</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr07d06">13</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr07d07">14</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr07d08">15</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr07d09">16</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr07d010">17</td>
+					</tr>
+					<tr>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr08d00">8</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr08d01">9</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr08d02">10</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr08d03">11</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr08d04">12</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr08d05">13</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr08d06">14</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr08d07">15</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr08d08">16</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr08d09">17</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr08d010">18</td>
+					</tr>
+					<tr>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr09d00">9</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr09d01">10</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr09d02">11</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr09d03">12</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr09d04">13</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr09d05">14</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr09d06">15</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr09d07">16</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr09d08">17</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr09d09">18</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr09d010">19</td>
+					</tr>
+					<tr>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr10d00">10</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr10d01">11</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr10d02">12</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr10d03">13</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr10d04">14</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr10d05">15</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr10d06">16</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr10d07">17</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr10d08">18</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr10d09">19</td>
+						<td onmouseout="hideSolution(this)" onmouseover="showSolution(this)" id="addTr10d010">20</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+	</table>
+
+
+</body>
+</html>

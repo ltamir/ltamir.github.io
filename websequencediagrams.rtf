@@ -1,0 +1,51 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf340
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 https://www.websequencediagrams.com/\
+\
+title WebSite\
+\
+menu --> Home page: location.href\
+menu --> Preferences: location.href\
+menu --> Questionnaire: location.href\
+menu --> Results: location.href\
+menu --> About: location.href\
+menu --> Exit: location.href\
+Exit -> Exit: remove session data\
+Exit -> Home page: location.href\
+Home page -> JS API :Login\
+JS API -> JS API: validation()\
+JS API -> JS API: load storage data to session\
+JS API -> Preferences: location.href\
+Home page -> JS API :Register\
+JS API -> JS API: validation()\
+JS API -> JS API: Create user\
+JS API -> JS API: load storage data to session\
+JS API -> Preferences: location.href\
+Preferences -> Preferences: set preferences\
+Preferences -> Questionnaire: location.href\
+alt while questionnaire is active\
+Questionnaire -> Questionnaire: display question\
+Questionnaire -> JS API: answer\
+JS API -> JS API: validate answer\
+JS API -> JS API: aggregate results\
+end\
+Questionnaire -> Results: location.href\
+\
+\
+\
+title Questionnaire\
+\
+Questionnaire->Questionnaire JS: onload[init]\
+Questionnaire JS->Common JS: commonInit\
+Questionnaire JS->Common JS: loadSessionUserDetails\
+Questionnaire JS->Common JS: loadSessionPreferences\
+Questionnaire JS->Common JS: loadSessionScores\
+Questionnaire JS->Common JS: loadOperations\
+Questionnaire JS->Questionnaire JS: firstEnter ? true : false\
+Questionnaire JS->Questionnaire JS: generateQuestion\
+Questionnaire JS->Questionnaire JS: displayQuestionnaireNum\
+note right of Bob: Bob thinks about it}

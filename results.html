@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+	<meta charset="UTF-8">
+
+	<title>חשבון צעיר - תוצאות</title>
+	<link rel="Shortcut icon" href="logo.jpg">
+	<link rel="stylesheet" type="text/css" href="style_clean.css">
+	<script type="text/javascript" src="dt.js"></script>
+	<script type="text/javascript" src="common.js"></script>	
+
+	<script type="text/javascript">
+
+	function setGuiData(){
+		
+
+	}
+
+	function loadQuestionnaireData(){
+		var elem = getDomElement("questionnaireHistory");
+		var questions = getQuestionsElements();
+
+		var tempBuffer = _questionsHistory.toString();
+		//tempBuffer = tempBuffer.replace(/,/g, " ");
+		//tempBuffer = tempBuffer.replace(/\|/g, "<br/>");
+
+		var tempTag = "<table width='30%' >";
+		tempTag += "<tr class='cssResultTableHeader'><td>שאלה</td><td>תשובתך</td><td>תשובה נכונה</td></tr><tr class='cssResultTableData'>";
+		
+		var pos = 0;
+		
+		while(pos < tempBuffer.length){
+			
+			if(tempBuffer.charAt(pos) == ","){
+
+				tempTag += "</td>";
+				pos++;
+			}
+			else if(tempBuffer.charAt(pos) == "|"){
+				tempTag += "</tr><tr class='cssResultTableData'>";
+				pos++
+			}
+			else{
+				tempTag += "<td>" + tempBuffer.charAt(pos);
+				pos++;
+				while(tempBuffer.charAt(pos) != "," && tempBuffer.charAt(pos) != "|" && tempBuffer.charAt(pos) != ""){
+				tempTag += tempBuffer.charAt(pos);
+				pos++;
+				}
+			}	
+		}
+		tempTag += "</table>";
+		elem.innerHTML = tempTag;
+	
+	}
+
+	function init(){
+		commonInit();
+		loadSessionScores();
+		loadQuestionnaireData();
+
+		getDomElement("lastLogin").innerHTML = loadSessionData(lastLoginDateKey);
+		getDomElement("currentScore").innerHTML = loadSessionData(currentScoreKey);
+        setMsgInfo("סיכום תוצאות לשאלון מספר " + _totalQuestionnaires);
+	}
+	</script>
+
+</head>
+<body onload="init()">
+
+	<table width="100%" border="0">
+		<tr>
+			<td rowspan="4"><img src="arithmatics.jpeg"></td>
+			<td class="cssMenu" onclick="navigateLogin()">עדכון פרטים</td>
+			<td class="cssMenu" onclick="navigatePreferences()">הכנת הלומדה</td>
+			<td class="cssMenu" onclick="navigateQuestions()">השאלון</td>
+			<td class="cssSelectedMenu" onclick="navigateResults()">תוצאות</td>
+			<td class="cssMenu" onclick="navigateHistory()">היסטוריה</td>
+			<td class="cssMenu" onclick="navigateNotes()">אודות</td>
+			<td class="cssMenu" onclick="logout()">יציאה</td>
+		</tr>
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="cssSelectedMenuLine"></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+			<td colspan="7">
+                <hr style="padding: 0px; margin:0px;"/>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" class="cssMessageInfo" id="userNameMessage"></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>        
+	</table>
+
+	<div class="cssMessageBoard" width="100%" id="lblMessage">Message Board</div>
+	<p> <span>תאריך כניסה אחרון: </span><span id="lastLogin"></span> </p>
+	<p><span>ניקוד נוכחי :</span><span id="currentScore"></span></p>
+	<br/>
+	<div id="questionnaireHistory"></div>
+</body>
+</html>

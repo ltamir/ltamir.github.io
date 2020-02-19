@@ -1,0 +1,7 @@
+// Place your settings in this file to overwrite default and user settings.
+{
+    "editor.fontFamily": "sans-serif",
+    "editor.fontSize": 14,
+    "editor.tabSize": 8,
+    "editor.insertSpaces": false
+}

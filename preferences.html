@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+	<meta charset="UTF-8">
+
+	<title>חשבון צעיר - אפשרויות</title>
+	<link rel="Shortcut icon" href="logo.jpg">
+	<link rel="stylesheet" type="text/css" href="style_clean.css">
+	<script type="text/javascript" src="dt.js"></script>
+	<script type="text/javascript" src="common.js"></script>
+
+	<script type="text/javascript">
+
+
+		function validatePreferences(){
+          if(getDomElement("txtNumOfQuestions").value < 4){
+              setMsgFailure("יש לבחור לפחות 4 שאלות. בחר שוב ולחץ על שמירה");
+              return false;
+          }
+          return true;
+		}
+
+
+		//  reads user selection and  save to Session & Storage
+		function savePreferences(){
+			saveGUIPreferences();
+			saveSessionPreferences();
+			saveStoragePreferences();
+		}
+
+		// read GUI elements value into the common variables
+		function saveGUIPreferences(){
+			"use strict";
+            if( !validatePreferences() )
+                return;
+
+			_numOfQuestions = getDomElement("txtNumOfQuestions").value;
+			_maxNumValue = getDomElement("cmbRange").value;
+
+			if(getDomElement("chkAddition").checked)
+				_enableAddition = getDomElement("chkAddition").value;
+			else
+				_enableAddition = "";
+
+			if(getDomElement("chkSubtraction").checked)
+				_enableSubtraction = getDomElement("chkSubtraction").value;
+			else
+				_enableSubtraction = "";
+
+			if(getDomElement("chkMultiplication").checked)
+				_enableMultiplication = getDomElement("chkMultiplication").value;
+			else
+				_enableMultiplication = "";
+
+			if(getDomElement("chkDivision").checked)
+				_enableDivision = getDomElement("chkDivision").value;
+			else
+				_enableDivision = "";
+
+			_enableNegatives = getDomElement("enableNegatives").value;
+			_enableRemainder = getDomElement("enableRemainder").value;
+		}
+
+
+		function loadPreferences(){
+            loadSessionUserDetails();
+			loadSessionPreferences();
+			loadGUIPreferences();
+		}
+
+		function loadGUIPreferences(){
+
+			getDomElement("txtNumOfQuestions").value = _numOfQuestions;
+			getDomElement("cmbRange").value = _maxNumValue;
+
+			if(_enableAddition == "+")
+				getDomElement("chkAddition").checked = true;
+			if(_enableSubtraction == "-")
+				getDomElement("chkSubtraction").checked = true;
+			if(_enableMultiplication == "*")
+				getDomElement("chkMultiplication").checked = true;
+			if(_enableDivision == "/")
+				getDomElement("chkDivision").checked = true;
+
+			if(_enableNegatives == 1){
+				getDomElement("enableNegatives").checked = true;
+				getDomElement("enableNegatives").value = 1;
+				getDomElement("enableNegativesImg").src = "checked.jpg";
+			}
+
+			if(_enableRemainder == 1){
+				getDomElement("enableRemainder").checked = true;
+				getDomElement("enableRemainder").value = 1;
+				getDomElement("enableRemainderImg").src = "checked.jpg";
+			}
+		}
+
+
+		function updateLabel(labelName){
+			getDomElement(labelName).innerHTML = getDomElement("txtNumOfQuestions").value;
+		}
+
+
+		function toggleCheckValue(element){
+			hiddenInput = element.id.substr(0, element.id.length - 3);
+
+			if(getDomElement(hiddenInput).value == 1){
+				element.src = "unchecked.jpg";
+				getDomElement(hiddenInput).value = 0;
+			}else{
+				element.src = "checked.jpg";
+				getDomElement(hiddenInput).value = 1;
+			}
+		}
+
+
+		function init(){
+
+			commonInit();
+
+			loadPreferences();
+			updateLabel('lblNumOfQuestions');
+			setMsgInfo(" בחר/י את מאפייני השאלון");
+		}
+	</script>
+</head>
+<body onload="init()">
+
+	<table width="100%" border="0">
+		<tr>
+			<td rowspan="4"><img src="arithmatics.jpeg"></td>
+			<td class="cssMenu" onclick="navigateLogin()">עדכון פרטים</td>
+			<td class="cssSelectedMenu" onclick="navigatePreferences()">הכנת הלומדה</td>
+			<td class="cssMenu" onclick="navigateQuestions()">השאלון</td>
+			<td class="cssMenu" onclick="navigateResults()">תוצאות</td>
+			<td class="cssMenu" onclick="navigateHistory()">היסטוריה</td>
+			<td class="cssMenu" onclick="navigateNotes()">אודות</td>
+			<td class="cssMenu" onclick="logout()">יציאה</td>
+		</tr>
+        <tr>
+            <td></td>
+            <td class="cssSelectedMenuLine"></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+			<td colspan="7">
+                <hr style="padding: 0px; margin:0px;"/>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" class="cssMessageInfo" id="userNameMessage"></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>        
+	</table>
+	
+	<div class="cssMessageBoard" width="100%" id="lblMessage">Message Board</div>
+	<br/>
+	<label class="cssSectionTitle" for="txtNumOfQuestions">מספר השאלות:</label>
+	<br/>
+	<input type="range" id="txtNumOfQuestions" value="0" min="0" max="20" onmousemove="updateLabel('lblNumOfQuestions')" onchange="updateLabel('lblNumOfQuestions')"/>
+	<span id="lblNumOfQuestions"></span>
+	<br/><br/>
+
+	<label class="cssSectionTitle" for="cmbRange">טווח מספרים</label>
+    <br/>
+	<select id="cmbRange">
+		<option value="10">10 - 1</option>
+		<option value="50">50 - 1</option>
+		<option value="100">100 - 1</option>
+	</select>
+	<br/><br/>
+
+	<span class="cssSectionTitle">פעולות חשבון</span><br/>
+	<input type="checkbox" id="chkAddition" value="+" /><label for="chkAddition">חיבור</label><br/>
+	<input type="checkbox" id="chkSubtraction" value="-" /><label for="chkSubtraction">חיסור</label><br/>
+	<input type="checkbox" id="chkMultiplication" value="*" /><label for="chkMultiplication">כפל</label><br/>
+	<input type="checkbox" id="chkDivision" value="/" /><label for="chkDivision">חילוק</label><br/>
+	<br/><br/>
+
+    <span class="cssSectionTitle">תוצאות</span>
+    <br/><br/>
+	<img valign="bottom" id="enableNegativesImg" src="unchecked.jpg" onclick="toggleCheckValue(this)">&nbsp;<input type="hidden" id="enableNegatives" value="0"  /><label for="enableNegatives">אפשר תוצאות שליליות</label><br/>
+	<br/>
+
+	<img valign="bottom" id="enableRemainderImg" src="unchecked.jpg" onclick="toggleCheckValue(this)">&nbsp;<input type="hidden" id="enableRemainder" value="0" onclick="toggleCheckValue(this)" /><label for="enableRemainder">אפשר תוצאות עם שבר עשרוני</label><br/>
+	<br/><br/>
+	
+	<span class="cssButton" onmousedown="btnDown(this)" onmouseup="btnUp(this)" onclick="savePreferences()">&nbsp; שמירה &nbsp;</span>
+	
+	<span class="cssButton" onmousedown="btnDown(this)" onmouseup="btnUp(this)" onclick="savePreferences();navigateQuestions();">&nbsp; שמירה והמשך לשאלון &nbsp;</span>
+
+</body>
+</html>

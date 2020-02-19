@@ -1,0 +1,161 @@
+body{
+	background-color: #f0f0f5;
+	font-family: sans-serif;
+}
+
+.cssMessageBoard{
+	/* font-weight:bold; */
+	font-size:16pt;
+	border: 1px inset;
+	font-family: Tahoma, Geneva, sans-serif;
+	font-style: oblique;
+	color: #cc3300;
+	background-color: #f9f9f9;
+}
+
+.cssSectionTitle{
+	text-decoration:underline;
+}
+
+.cssMathExercise{
+	font-weight: bold;
+    color: #424e5a;
+}
+
+.cssMessageInfo{
+	font-family: "Verdana";
+	font-style: italic;
+	background-color: #f5f5f5;
+	color: #00802b;
+}
+
+.cssMenu{
+	width: 15%;
+	font-family: arial;
+	border-top: 1px solid #f5f5f0;
+	border-left: 1px solid #f5f5f0;
+	border-bottom: 1px solid #1e1e15;
+	border-right: 1px solid #1e1e15;
+	text-align: center;
+	background-color: #f1f1f1;
+	color: #000000;
+}
+
+.cssMenu:hover{
+	cursor: pointer;
+	background-color: #555;
+	color: white;
+}
+
+.cssSelectedMenu{
+    width: 15%;
+	font-family: arial;
+	border-bottom: 1px solid #f5f5f0;
+	border-right: 1px solid #f5f5f0;
+	border-top: 1px solid #1e1e15;
+	border-left: 1px solid #1e1e15;
+	text-align: center;
+	background-color: #4CAF50;
+	color: #FFFFFF;
+}
+
+.cssSelectedMenu:hover{
+	cursor: pointer;
+	background-color: #555;
+	color: #FFFFFF;	
+}
+
+.cssSelectedMenuLine{
+    background-color: inherit;
+}
+
+/* **** custom buttons **** */
+
+.cssButton{
+	font-family: arial;
+	text-align: center;
+	border-top: 2px solid #b1b1b0;
+	border-left: 2px solid #b1b1b0;
+	border-bottom: 2px solid #1e1e15;
+	border-right: 2px solid #1e1e15;
+	background-color: #f1f1f1;
+	color: #000000;
+}
+
+.cssButton:hover{
+	cursor: pointer;
+	background-color: #919190;
+	color: white;
+}
+
+.cssSelectedButton{
+	font-family: arial;
+	text-align: center;
+	border-top: 2px solid #1e1e15;
+	border-left: 2px solid #1e1e15;	
+	border-bottom: 2px solid #b1b1b0;
+	border-right: 2px solid #b1b1b0;
+	background-color: #f1f1f1;
+	color: #000000;
+}
+
+.cssSelectedButton:hover{
+	cursor: pointer;
+	background-color: #919190;
+	color: white;
+}
+
+/* **** cssMultiplicationSquare **** */
+/* table[className="cssMultiplicationSquare"] td */
+
+table[id="multiplicationSquare"] td{
+	border: 4px solid #f0f0f5;
+	text-align: center;
+	cursor: pointer;
+}
+
+table[id="additionSquare"] td{
+	border: 4px solid #f0f0f5;
+	text-align: center;
+	cursor: pointer;
+}
+
+/*
+table[id="multiplicationSquare"] tr:hover{
+	background-color: #FEFEFE;
+	cursor: pointer;
+}
+*/
+
+.cssNumMatrixDefault{
+    background-color: #f0f0f5;
+    color: #000000;
+}
+
+.cssNumMatrixSelected{
+    background-color: #919190;
+    color: #FFFFFF;    
+}
+
+.cssShowSolutionNumbers{
+	border-style: groove;
+	border-color: #E4E4E4;
+
+}
+
+.cssShowSolutionAnswer{
+	border-style: groove;
+	border-color: #E4E4E4;
+	font-weight: bold;
+}
+
+.cssResultTableHeader{
+	font-weight:bold;
+	background-color: #919190;
+	padding: 20px;
+}
+
+.cssResultTableData{
+	background-color: #f9f9f9;
+	border: 4px groove #e4e4e4;
+}

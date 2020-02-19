@@ -1,0 +1,163 @@
+body{
+	background-color: #fbfbfb;
+	font-family: sans-serif;
+}
+
+.cssMessageBoard{
+	/* font-weight:bold; */
+	font-size:16pt;
+	border: 1px inset;
+	font-family: Tahoma, Geneva, sans-serif;
+	font-style: oblique;
+	color: #fbfbfb;
+	background-color: #424f5a;
+}
+
+.cssSectionTitle{
+	font-weight: bold;
+    color: #424e5a;
+}
+
+.cssMathExercise{
+    font-size:14pt;
+	font-weight: bold;
+    color: #424e5a;
+}
+
+.cssMessageInfo{
+	font-size:13pt;
+	font-family: "arial";
+	font-style: oblique;
+	background-color: #f5f5f5;
+	color: #224466;
+}
+
+.cssMenu{
+	width: 15%;
+	font-family: arial;
+	border-top: 1px solid #f5f5f0;
+	border-left: 1px solid #f5f5f0;
+	border-bottom: 1px solid #1e1e15;
+	border-right: 1px solid #1e1e15;
+	text-align: center;
+	background-color: #f1f1f1;
+	color: #424f5a;
+}
+
+.cssMenu:hover{
+	cursor: pointer;
+	/* background-color: #555;
+	color: white; */
+}
+
+.cssSelectedMenu{
+    width: 15%;
+	font-family: arial;
+	border-bottom: 1px solid #f5f5f0;
+	border-right: 1px solid #f5f5f0;
+	border-top: 1px solid #1e1e15;
+	border-left: 1px solid #1e1e15;
+	text-align: center;
+	background-color: #ebebeb;
+	color: #424f5a;
+}
+
+.cssSelectedMenu:hover{
+	cursor: pointer;
+	/*background-color: #555;
+	color: #FFFFFF;	*/
+}
+
+.cssSelectedMenuLine{
+    background-color:#ff9500;
+}
+/* **** custom buttons **** */
+
+.cssButton{
+	font-family: arial;
+	text-align: center;
+	border-top: 2px solid #b1b1b0;
+	border-left: 2px solid #b1b1b0;
+	border-bottom: 2px solid #1e1e15;
+	border-right: 2px solid #1e1e15;
+	border-radius: 5px;
+	background-color: #f1f1f1;
+	color: #000000;
+	height: 40px;
+}
+
+
+.cssButton:hover{
+	cursor: pointer;
+	/*background-color: #919190;
+	color: white;*/
+}
+
+
+.cssSelectedButton{
+	font-family: arial;
+	text-align: center;
+	border-top: 2px solid #1e1e15;
+	border-left: 2px solid #1e1e15;
+	border-bottom: 2px solid #b1b1b0;
+	border-right: 2px solid #b1b1b0;
+	background-color: #f1f1f1;
+	border-radius: 5px;
+	color: #000000;
+	height: 30px;
+}
+
+
+.cssSelectedButton:hover{
+	cursor: pointer;
+	/*background-color: #919190;
+	color: white;*/
+}
+
+/* **** cssMultiplicationSquare **** */
+/* table[className="cssMultiplicationSquare"] td */
+
+table[id="multiplicationSquare"] td{
+	border: 4px solid #fbfbfb;
+	text-align: center;
+	cursor: pointer;
+}
+
+table[id="additionSquare"] td{
+	border: 4px solid #fbfbfb;
+	text-align: center;
+	cursor: pointer;
+}
+
+.cssNumMatrixDefault{
+    background-color: #fbfbfb;
+    color: #000000;
+}
+
+.cssNumMatrixSelected{
+    background-color: #919190;
+    color: #FFFFFF;
+}
+
+.cssShowSolutionNumbers{
+	color: #424f5a;
+	border: 4px groove #e4e4e4;
+}
+
+.cssShowSolutionAnswer{
+	color: #424f5a;
+	border: 4px groove #e4e4e4;
+	font-weight: bold;
+}
+
+.cssResultTableHeader{
+	font-weight:bold;
+	background-color: #919190;
+	padding: 20px;
+}
+
+.cssResultTableData{
+	background-color: #f0f0f5;
+	border: 4px groove #e4e4e4;
+}
+
