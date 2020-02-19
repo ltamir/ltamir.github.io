@@ -195,7 +195,7 @@ function loadOperations(){
 // ***** Navigation functions ***** //
 
 function navigateLogin(){
-	location.href = "login.html";
+	location.href = "index.html";
 }
 
 function navigatePreferences(){
@@ -298,7 +298,7 @@ function changePageStyle(cssFile){
 function commonInit(){
 	var _userName = loadSessionData(userNameKey);
 	
-	if(_userName == null && location.href.indexOf("login.html") == -1)
+	if(_userName == null && location.href.indexOf("index.html") == -1)
 		navigateLogin();
 
     // page style handling
