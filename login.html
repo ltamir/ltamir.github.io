@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+	<meta charset="UTF-8">
+
+	<title>חשבון צעיר - כניסה</title>
+	<link rel="Shortcut icon" href="logo.jpg">
+	<link rel="stylesheet" type="text/css" href="style_clean.css">
+	<script type="text/javascript" src="common.js"></script>
+	<script type="text/javascript" src="dt.js"></script>
+
+	<script type="text/javascript">
+
+		// ***** Page specific functionality ***** //
+
+		function loginUser(){
+			var localUserName;
+			var txtUserName = getDomElement("txtUserName").value;
+
+			if( validateUserName(txtUserName) ){
+				localUserName = loadStorageData(txtUserName + "_" + userNameKey);
+				if(!localUserName){
+					setMsgFailure("שם המשתמש אינו קיים. אנא הירשם בטופס הרישום");
+					return;
+				}
+			}else{
+				return;
+			}
+
+			// validation passed ==>
+
+			_userName = localUserName;
+			
+			loadData();
+
+			navigatePreferences();
+			
+		}
+		
+		function loadData(){
+			// load UserDetails to session
+			loadStorageUserDetails();
+			saveSessionUserDetails();
+
+			// update storage with current datetime
+			saveStorageData(keyPrefix() + lastLoginDateKey, getCurrentDateTime());
+			
+			// loadPreferenceDetails to session
+			loadStoragePreferences();
+			saveSessionPreferences();
+
+			// loadScoreDetails
+			loadStorageScores();
+			saveSessionScores();		
+		}
+		
+
+		function registerUser(){
+            if(getDomElement("cmbRegisterStyleSelector").disabled == true)
+                return;
+				
+			// validate username, full name and email address
+			var userName = getDomElement("txtRegisterUserName").value;
+			var email = getDomElement("txtRegisterEmail").value;
+			var fullName;
+			if(getDomElement("txtRegisterFullName").disabled)
+				fullName = userName;
+			else
+			 	fullName = getDomElement("txtRegisterFullName").value;
+
+
+			if( !validateUserName(userName) ||  !validateFullName(fullName) || !validateEmail(email) )
+				return;
+
+			_userName = userName;
+			_email = email;
+			_fullName = fullName;
+			_lastLoginDate = getCurrentDateTime();
+			_pageStyle = getDomElement("cmbRegisterStyleSelector").value;
+			
+			saveStorageUserDetails();
+
+			_enableAddition = "+";
+			_enableSubtraction = "";
+			_enableMultiplication = "*";
+			_enableDivision = "";
+			
+			_numOfQuestions = 10;
+			_maxNumValue = 10;
+			_enableNegatives = 0;
+			_enableRemainder = 0;
+
+			saveStoragePreferences();
+			
+			_totalScore = 0;
+			_currentScore = 0;
+			_currentQuestion = 1;
+			_currentQuestionnaire = 1;
+			_totalQuestionnaires = 0;
+			saveStorageScores();
+
+			loadData();
+			
+			navigatePreferences();			
+		}
+
+		function useUserNameAsFullName(){
+			var registerFullName = getDomElement("txtRegisterFullName");
+
+			if(!registerFullName.disabled){
+				registerFullName.style.textDecoration = "line-through";
+				registerFullName.disabled = true;
+			}else{
+				registerFullName.style.textDecoration = "none";
+				registerFullName.disabled = false;
+			}
+
+		}
+
+		function activateOnEnter(event,	 funcName){
+			var keyCode = event.which || event.keyCode;
+			if(keyCode == 13)
+				eval(funcName);
+		}
+
+		// ***** validations ***** //
+
+		function validateUserName(userName){
+			var result;
+
+			if(userName.length == 0){
+				setMsgFailure("שם המשתמש ריק. הקלד שם משתמש בעל 2 תוים ומעלה");
+				result = false;
+			}else if(userName.length < 2){
+				setMsgFailure("שם המשתמש מכיל פחות מ 2 תוים. הקלד לפחות 2 תוים (אותיות או ספרות)");
+				result = false;
+			}else{
+				result = true;
+			}
+
+			return result;
+		}
+
+		function validateFullName(userName){
+			var result;
+
+			if(userName.length == 0){
+				setMsgFailure("שדה 'שם מלא' ריק. הקלד שם מלא בעל 2 תוים ומעלה או סמן את 'השתמש ב שם המשתמש'");
+				result = false;
+			}else{
+				result = true;
+			}
+
+			return result;
+		}		
+
+		function validateEmail(email){
+			var result;
+
+			if(email.length == 0){
+				setMsgFailure("שדה 'כתובת דואר אלקטורני' ריק. הקלדת את כתובת האימייל שלך, לדוגמא: johnSmith@gmail.com");
+				result = false;
+			}
+			else if(email.length < 5){
+				setMsgFailure("שדה 'כתובת דואר אלקטורני' קצר מדי. אנא וודא/י כי הכתובת נכונהת לדוגמא: johnSmith@gmail.com");
+				result = false;
+			}
+			else if( (email.indexOf("@") == -1) ){
+				setMsgFailure("שדה 'כתובת דואר אלקטורני' חסר את התו @ . אנא וודא/י כי הכתובת נכונהת לדוגמא: johnSmith@gmail.com");
+				result = false;
+			}
+			else if(email.indexOf(" ") > 1){
+				setMsgFailure("שדה 'כתובת דואר אלקטורני' מכיל רווח. אנא מחק/י את הרווח");
+				result = false;
+			}else if(!validateEmailCharacters(email)){
+				setMsgFailure("שדה 'כתובת דואר אלקטורני' מכיל תו לא חוקי. אנא וודא/י את כתובת האימייל");
+				result = false;
+			}else{
+				result = true;
+			}
+
+			return result;
+		}
+
+		// allows A-z, 0-9, underscore, dash, space and @
+		function validateEmailCharacters(email){
+			var result;
+
+			for(counter=0; counter < email.length; counter++){
+				var uCode = email.charCodeAt(counter);
+				if( (uCode >= 65 && uCode <= 90) || (uCode >= 97 && uCode <= 122) )	// A-Z a-z
+					result = true;
+				else if(uCode == 95 || uCode <= 45 || uCode <= 32 || uCode <= 64)					// _ - space @
+					result = true;
+				else
+					return false;
+			}
+
+			return result;
+		}
+        
+        function disableRegisterElements(){
+            
+            getDomElement("txtRegisterUserName").disabled = true;
+            getDomElement("txtRegisterFullName").disabled = true;
+            getDomElement("chkUserAsFullName").disabled = true;
+            getDomElement("txtRegisterEmail").disabled = true;
+            getDomElement("cmbRegisterStyleSelector").disabled = true;
+            getDomElement("cmdRegisterUser").disabled = true;
+
+            getDomElement("loginDiv").style.display = "none";
+            
+        }
+        
+        function showUserDetails(){
+            getDomElement("txtFullName").value = _fullName;
+            getDomElement("txtEmail").value = _email;
+            getDomElement("cmbStyleSelector").value = _pageStyle;
+        }
+
+        function saveUserDetails(){
+            _fullName = getDomElement("txtFullName").value;
+            _email = getDomElement("txtEmail").value;
+            _pageStyle = getDomElement("cmbStyleSelector").value;
+
+            saveStorageUserDetails();
+            saveSessionUserDetails();
+        }
+
+		function init(){
+		commonInit();
+            
+        // if user is logged-in disable Register user and enable him to update his details
+        if(_userName){
+        	loadStorageUserDetails();
+            disableRegisterElements();
+            showUserDetails();
+        }else{
+        	getDomElement("updateUserDetailsDiv").style.display = "none";
+        	getDomElement("txtUserName").focus();
+        }
+		
+		var currentStyle = loadSessionData(pageStyleKey);
+		if(!currentStyle)
+			currentStyle = "style_football.css";
+		getDomElement("cmbRegisterStyleSelector").value = currentStyle;
+
+		}
+	</script>
+
+</head>
+<body onload="init()">
+
+	<table width="100%" border="0">
+		<tr>
+			<td rowspan="4"><img src="arithmatics.jpeg"></td>
+			<td class="cssSelectedMenu" onclick="navigateLogin()">מסך הבית</td>
+			<td class="cssMenu" onclick="navigatePreferences()">הכנת הלומדה</td>
+			<td class="cssMenu" onclick="navigateQuestions()">השאלון</td>
+			<td class="cssMenu" onclick="navigateResults()">תוצאות</td>
+			<td class="cssMenu" onclick="navigateHistory()">היסטוריה</td>
+			<td class="cssMenu" onclick="navigateNotes()">אודות</td>
+			<td class="cssMenu" onclick="logout()">יציאה</td>
+		</tr>
+        <tr>
+            <td class="cssSelectedMenuLine"></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+			<td colspan="7">
+                <hr style="padding: 0px; margin:0px;"/>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" class="cssMessageInfo" id="userNameMessage"></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>        
+	</table>
+
+	<div class="cssMessageBoard" width="100%" id="lblMessage">ברוכים הבאים. כאן תוכלו לצפות בהודעות הלומדה</div>
+	<div id="loginDiv">
+		<p class="cssSectionTitle">תלמידים רשומים</p>
+		<p class="cssMessageInfo">הקלד/י את שם המשתמש שלך ולחצ/י על כפתור ביצוע כניסה</p>
+		<label id="lblUserName" for="txtUserName">שם משתמש: </label>
+		<input type="text" id="txtUserName" onkeypress="activateOnEnter(event, 'loginUser()')" />
+		<br/><br/>
+		<span id="cmdLogin" class="cssButton" onmousedown="btnDown(this)" onmouseup="btnUp(this)" onclick="loginUser()" >&nbsp; ביצוע כניסה &nbsp;</span>
+		<br/><br/>
+	</div>
+	<div id="updateUserDetailsDiv">
+		<p class="cssSectionTitle">עדכון פרטים</p>	
+		<label for="txtFullName">שם מלא: </label>
+		<input type="text" id="txtFullName" />
+		<label for="txtEmail">כתובת דואר אלקטרוני: </label>
+		<input type="text" id="txtEmail" size="50" dir="ltr" />
+		<span>בחר נושא עיצוב</span>
+		<select id="cmbStyleSelector" onchange="changePageStyle(this.value)">
+			<option value="style_clean.css">נקי</option>
+			<option value="style_football.css">כדוררגל</option>
+		</select>
+		<br/><br/>
+		<span id="cmdUpdateUser" class="cssButton" onmousedown="btnDown(this)" onmouseup="btnUp(this)" onclick="saveUserDetails()" >&nbsp; עדכון פרטים &nbsp;</span>
+	</div>
+	<hr/>
+
+	<p class="cssSectionTitle">תלמידים חדשים</p>
+
+	<p class="cssMessageInfo">אם הנך משתמש חדש בלומדה, בחר שם משתמש והקלד את כתובת הדואר האלקטרוני שלך</p>
+	<label for="txtRegisterUserName">שם משתמש: </label>
+	<input type="text" id="txtRegisterUserName" />
+	<br/>
+	<label for="txtRegisterFullName">שם מלא: </label>
+	<input type="text" id="txtRegisterFullName" />
+	<label for="chkUserAsFullName">השתמש ב שם המשתמש: </label>
+	<input type="checkbox" id="chkUserAsFullName" onclick="useUserNameAsFullName();">
+	<br/>
+	<label for="txtRegisterEmail">כתובת דואר אלקטרוני: </label>
+	<input type="text" id="txtRegisterEmail" size="50" dir="ltr" />
+    <br/>
+    <span>בחר עיצוב</span>
+	<select id="cmbRegisterStyleSelector" onchange="changePageStyle(this.value)">
+			<option value="style_clean.css">נקי</option>
+			<option value="style_football.css">כדוררגל</option>
+	</select>
+	<br/><br/>
+	<span id="cmdRegisterUser" class="cssButton" onmousedown="btnDown(this)" onmouseup="btnUp(this)" onclick="registerUser()">&nbsp; ביצוע רישום &nbsp;</span>
+
+</body>
+</html>
